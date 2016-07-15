@@ -123,17 +123,117 @@ Yacs.views.courses = function (data) {
     descriptionRequireTruncation(description, showButton);
   });
 
-  var resizingFunction;
-  window.addEventListener('resize', function () {
-    if (document.querySelector('#content courses')){
-      clearTimeout(resizingFunction);
-      resizingFunction = setTimeout(function () {
-        document.querySelectorAll('course').forEach(function (c) {
-          var description = c.querySelector('course-description');
-          var showButton = c.querySelector('show-hide-button');
-          descriptionRequireTruncation(description, showButton);
-        });
-      }, 100);
-    }
-  });
+  var checkAllDescriptionOverflow = function () {
+    console.log("checking all coureses");
+    document.querySelectorAll("course").forEach(function (c) {
+      var description = c.querySelector("course-description"),
+          showButton  = c.querySelector("show-hide-button");
+      descriptionRequireTruncation(description, showButton);
+    });    
+  };
+
+  // (function () {
+  //   var expand = document.querySelector(".resize-sensor-expand"),
+  //       expandChild = expand.childNodes[0],
+  //       shrink = document.querySelector(".resize-sensor-shrink"),
+  //       running = false;
+  //   console.log(expand, expandChild, shrink);
+  //   var reset = function () {
+  //     expandChild.style.width  = 100000+'px';
+  //     expandChild.style.height = 100000+'px';
+
+  //     expand.scrollLeft = 100000;
+  //     expand.scrollTop  = 100000;
+
+  //     shrink.scrollLeft = 100000;
+  //     shrink.scrollTop  = 100000;
+  //   };
+  //   var onScroll = function () {
+  //     if (!running) {
+  //       running = true;
+  //       requestAnimationFrame(checkAllDescriptionOverflow);
+  //       running = false;
+  //     }
+  //     console.log("resizing");
+  //     reset();
+  //   };
+  //   reset();
+  //   expand.addEventListener("scroll", onScroll);
+  //   shrink.addEventListener("scroll", onScroll);
+  // }());
+  var attach = function(element) {
+    element.resizeSensor = document.createElement('div');
+    element.resizeSensor.className = 'resize-sensor';
+    var style = 'position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; z-index: -1; visibility: hidden;';
+    var styleChild = 'position: absolute; left: 0; top: 0; transition: 0s;';
+
+    element.resizeSensor.style.cssText = style;
+    element.resizeSensor.innerHTML =
+      '<div class="resize-sensor-expand" style="' + style + '">' +
+      '<div style="' + styleChild + '"></div>' +
+      '</div>' +
+      '<div class="resize-sensor-shrink" style="' + style + '">' +
+      '<div style="' + styleChild + ' width: 200%; height: 200%"></div>' +
+      '</div>';
+    element.appendChild(element.resizeSensor);
+    element.style.position = 'relative';
+
+    var expand = document.querySelector(".resize-sensor-expand"),
+        expandChild = expand.childNodes[0];
+    var shrink = document.querySelector(".resize-sensor-shrink");
+    console.log(expand, expandChild, shrink);
+
+    var reset = function() {
+      expandChild.style.width  = 100000+'px';
+      expandChild.style.height = 100000+'px';
+
+      expand.scrollLeft = 100000;
+      expand.scrollTop  = 100000;
+
+      shrink.scrollLeft = 100000;
+      shrink.scrollTop  = 100000;
+    };
+    reset();
+    var counter = 0,
+        ccounter = 0,
+        dirty = false,
+        checking = false;
+    var onScroll = function(){
+      console.log('resize detected', dirty);
+      //dirty = true;
+      if(!checking){
+        checking = true;
+        requestAnimationFrame(checkAllDescriptionOverflow);
+        checking = false;
+      }
+      reset();
+    };
+    setInterval(function(){counter = 0;ccounter=0;}, 1000);
+    var checkDirty = function(){
+      console.log("check: ", ccounter++);
+      //if(dirty){
+      console.log('resize: ',counter++);
+      dirty= false;
+      //}
+      checking = false;
+      //    requestAnimationFrame(checkDirty);
+    };
+    //  requestAnimationFrame(checkDirty);
+    expand.addEventListener("scroll", onScroll);
+    shrink.addEventListener("scroll", onScroll);
+  };
+  attach(document.querySelector("#content"));
+  // var resizingFunction;
+  // window.addEventListener('resize', function () {
+  //   if (document.querySelector('#content courses')){
+  //     clearTimeout(resizingFunction);
+  //     resizingFunction = setTimeout(function () {
+  //       document.querySelectorAll('course').forEach(function (c) {
+  //         var description = c.querySelector('course-description');
+  //         var showButton = c.querySelector('show-hide-button');
+  //         descriptionRequireTruncation(description, showButton);
+  //       });
+  //     }, 100);
+  //   }
+  // });
 };
