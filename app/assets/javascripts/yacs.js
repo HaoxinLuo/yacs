@@ -39,7 +39,7 @@ Yacs = new function () {
     for (var param in params) {
       if (params.hasOwnProperty(param)) {
         var val = params[param];
-        if (Array.isArray()) val = val.join(',')
+        if (Array.isArray(val)) val = val.join(',');
         query += param + '=' + val + '&';
       }
     }
