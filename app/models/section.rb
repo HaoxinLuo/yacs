@@ -3,9 +3,8 @@ class Section < ActiveRecord::Base
   validates  :name, presence: true, uniqueness: { scope: :course_id }
   validates  :crn, presence: true, uniqueness: true
   default_scope { order(name: :asc) }
-  before_save :convert_periods_start_end
+  before_save :type_cast_periods_start_end 
   after_save :update_conflicts
-
 
   def conflicts_with(section)
     i = 0
@@ -29,7 +28,7 @@ class Section < ActiveRecord::Base
   end
   
   private
-  def convert_periods_start_end
+  def type_cast_periods_start_end
     periods_start.map! { |e| e = e.to_i }
     periods_end.map!   { |e| e = e.to_i }
   end
