@@ -34,7 +34,7 @@ class Section < ActiveRecord::Base
   end
 
   def update_conflicts
-    Section.where.not(id: id).each do |section|
+    Section.where.not(course_id: course_id).each do |section|
       if conflicts_with section
         Redis.current.sadd id, section.id
         Redis.current.sadd section.id, id
