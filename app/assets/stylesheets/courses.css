@@ -58,6 +58,11 @@ sections>section.closed, sections>section.closed:hover {
 }
 sections>section.conflict {
     color: #888;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Chrome/Safari/Opera */
+    -khtml-user-select: none;    /* Konqueror */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
 }
 sections>section.conflict:before {
     background-color: rgba(200, 200, 200, .7);

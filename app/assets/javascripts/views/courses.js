@@ -74,16 +74,34 @@ Yacs.views.courses = function (target, data) {
     return isConflicting;
   };
 
+  var courseNames = {};
+  Yacs.models.courses.query({ section_id: Yacs.user.getSelections(),
+                              name_search: true },
+    function (data, success) {
+      if (success) { courseNames = data.names; }
+  });
+
+  var getCourseName = function (sectionId) {
+    var name = courseNames[sectionId];
+    if (!name) {
+      var sectionName = target.querySelector('section[data-id="' + sectionId + '"] section-name');
+      var courseName = sectionName.closest('course').querySelector('course-name');
+      name = courseName.innerHTML + ' section ' + sectionName.innerHTML;
+      courseNames[sectionId] = name;
+    }
+    return name;
+  };
+
   var doesSectionConflict = function (sectionConflicts) {
-    var result = { conflicting: false,
-                   conflicts_with: null };
+    var conflicting = false;
+    var conflicts_with = null;
     Yacs.user.getSelections().forEach(function (selectedSectionId) {
       if(sectionConflicts.indexOf(selectedSectionId) != -1) {
-        result.conflicts_with = result.conflicts_with || selectedSectionId;
-        result.conflicting = true;
+        conflicts_with = conflicts_with || selectedSectionId;
+        conflicting = true;
       }
     });
-    return result;
+    return {conflicting: conflicting, conflicts_with: conflicts_with};
   };
 
   var updateConflictingSections = function () {
@@ -93,8 +111,9 @@ Yacs.views.courses = function (target, data) {
         var section = course.querySelector('section[data-id="'+s.id+'"]');
         var conflictCheck = doesSectionConflict(s.conflicts);
         if (conflictCheck.conflicting) {
+          var courseAndSectionName = 'Conflicts with ' + getCourseName(conflictCheck.conflicts_with);
           section.classList.add('conflict');
-          section.setAttribute('conflicts-with', 'Conflicts with ' + conflictCheck.conflicts_with);
+          section.setAttribute('conflicts-with', courseAndSectionName);
         }
         else {
           section.classList.remove('conflict');
