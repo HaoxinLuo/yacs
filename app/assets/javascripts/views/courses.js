@@ -60,10 +60,50 @@ Yacs.views.courses = function (target, data) {
    */
   var isCourseSelected = function (course) {
     var isSelected = true;
-    course.querySelectorAll('section:not(.closed)').forEach(function (s) {
+    course.querySelectorAll('section:not(.closed):not(.conflict)').forEach(function (s) {
       if (!Yacs.user.hasSelection(s.dataset.id)) isSelected = false;
     });
     return isSelected;
+  };
+
+  var isCourseConflicting = function (course) {
+    var isConflicting = true;
+    course.querySelectorAll('section').forEach(function (s) {
+      if (!s.classList.contains('conflict')) isConflicting = false;
+    });
+    return isConflicting;
+  };
+
+  var doesSectionConflict = function (sectionConflicts) {
+    var result = { conflicting: false,
+                   conflicts_with: null };
+    Yacs.user.getSelections().forEach(function (selectedSectionId) {
+      if(sectionConflicts.indexOf(selectedSectionId) != -1) {
+        result.conflicts_with = result.conflicts_with || selectedSectionId;
+        result.conflicting = true;
+      }
+    });
+    return result;
+  };
+
+  var updateConflictingSections = function () {
+    data.courses.forEach(function (c) {
+      var course = target.querySelector('course[data-id="'+c.id+'"]');
+      c.sections.forEach(function (s) {
+        var section = course.querySelector('section[data-id="'+s.id+'"]');
+        var conflictCheck = doesSectionConflict(s.conflicts);
+        if (conflictCheck.conflicting) {
+          section.classList.add('conflict');
+          section.setAttribute('conflicts-with', 'Conflicts with ' + conflictCheck.conflicts_with);
+        }
+        else {
+          section.classList.remove('conflict');
+          section.removeAttribute('conflicts-with');
+        }          
+      });
+      var isSelected = isCourseSelected(course);
+      course.classList[isSelected ? 'add' : 'remove']('selected');
+    });
   };
 
   /**
@@ -72,6 +112,7 @@ Yacs.views.courses = function (target, data) {
    */
   target.getElementsByTagName('section').forEach(function (s) {
     Yacs.on('click', s, function(section) {
+      if (section.classList.contains('conflict')) return;
       var sid = section.dataset.id;
       if (Yacs.user.removeSelection(sid)) {
         section.classList.remove('selected');
@@ -80,8 +121,7 @@ Yacs.views.courses = function (target, data) {
         Yacs.user.addSelection(sid);
         section.classList.add('selected');
       }
-      var course = section.closest('course');
-      course.classList[isCourseSelected(course) ? 'add' : 'remove']('selected');
+      updateConflictingSections();
     });
     if (Yacs.user.hasSelection(s.dataset.id)) s.classList.add('selected');
   });
@@ -92,18 +132,21 @@ Yacs.views.courses = function (target, data) {
    */
   target.getElementsByTagName('course').forEach(function (c) {
     Yacs.on('click', c.getElementsByTagName('course-info')[0], function (ci) {
+      if (isCourseConflicting(c)) return;
       var isSelected = isCourseSelected(c);
       c.getElementsByTagName('section').forEach(function (s) {
         if (isSelected) {
           s.classList.remove('selected');
           Yacs.user.removeSelection(s.dataset.id);
-        } else if (!s.classList.contains('closed')) {
+        } else if (!s.classList.contains('closed') && !s.classList.contains('conflict')) {
           s.classList.add('selected');
           Yacs.user.addSelection(s.dataset.id);
         }
       });
-      c.classList[isSelected ? 'remove' : 'add']('selected');
+      updateConflictingSections();
     });
     if (isCourseSelected(c)) c.classList.add('selected');
   });
+
+  updateConflictingSections();
 };
