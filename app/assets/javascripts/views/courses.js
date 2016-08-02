@@ -78,7 +78,10 @@ Yacs.views.courses = function (target, data) {
   Yacs.models.courses.query({ section_id: Yacs.user.getSelections(),
                               name_search: true },
     function (data, success) {
-      if (success) { courseNames = data.names; }
+      if (success) { 
+        courseNames = data.names; 
+        updateConflictingSections();
+      }
   });
 
   var getCourseName = function (sectionId) {
