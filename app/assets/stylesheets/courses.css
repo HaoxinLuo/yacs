@@ -11,7 +11,7 @@ course:last-child {
     border: none;
 }
 
-course:not(.selected)>course-info:hover ~ sections section:not(.selected):not(.closed) {
+course:not(.selected)>course-info:hover ~ sections section:not(.selected):not(.closed):not(.conflict) {
     background-color: #d57f7f;
 }
 course.selected>course-info:hover ~ sections section.selected {
@@ -38,10 +38,11 @@ section {
     display:block;
     margin:0px 0px 0px 5px;
     padding:4px 4px 4px 8px;
-    overflow:auto;
+    overflow: hidden;
     font-size: 90%;
+    position: relative;
 }
-sections>section:not(.selected):hover {
+sections>section:not(.selected):not(.conflict):hover {
     background-color: #d57f7f;
 }
 sections>section.selected:hover {
@@ -55,7 +56,26 @@ sections>section.selected {
 sections>section.closed, sections>section.closed:hover {
     color: #888;
 }
-
+sections>section.conflict {
+    color: #888;
+}
+sections>section.conflict:before {
+    background-color: rgba(200, 200, 200, .7);
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: calc(100% - 1px);
+    content: '';
+}
+sections>section.conflict:after {
+    font-weight: 400;
+    color: black;
+    content: attr(conflicts-with);
+    left: 0px;
+    padding-left: 35%;
+    position: absolute;
+}
 section-name {
     font-weight: 400;
 }
