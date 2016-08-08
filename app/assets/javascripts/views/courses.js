@@ -34,7 +34,7 @@ Handlebars.registerHelper('day_name', function (n) {
 Handlebars.registerHelper('time_range', function (start, end) {
   return new Handlebars.SafeString([start, end].map(function (time) {
     var hour = Math.floor(time / 100);
-    var ampm = hour > 12 ? 'p' : 'a';
+    var ampm = hour >= 12 ? 'p' : 'a';
     hour = hour > 12 ? hour - 12 : hour == 0 ? 12 : hour;
     var minutes = time % 100;
     minutes = minutes > 9 ? minutes : minutes == 0 ? '' : '0' + minutes;
@@ -73,16 +73,6 @@ Yacs.views.courses = function (target, data) {
     });
     return isConflicting;
   };
-
-  var courseNames = {};
-  Yacs.models.courses.query({ section_id: Yacs.user.getSelections(),
-                              name_search: true },
-    function (data, success) {
-      if (success) { 
-        courseNames = data.names; 
-        updateConflictingSections();
-      }
-  });
 
   var getCourseName = function (sectionId) {
     var name = courseNames[sectionId];
@@ -135,12 +125,15 @@ Yacs.views.courses = function (target, data) {
   target.getElementsByTagName('section').forEach(function (s) {
     Yacs.on('click', s, function(section) {
       if (section.classList.contains('conflict')) return;
+      var course = section.closest('course');
+      var cid = course.dataset.id;
       var sid = section.dataset.id;
-      if (Yacs.user.removeSelection(sid)) {
+      if (Yacs.user.removeSelection(cid, sid)) {
         section.classList.remove('selected');
       }
       else {
-        Yacs.user.addSelection(sid);
+        var courseName = course.querySelector('course-name').innerHTML;
+        Yacs.user.addSelection(cid, courseName, sid);
         section.classList.add('selected');
       }
       updateConflictingSections();
@@ -159,10 +152,11 @@ Yacs.views.courses = function (target, data) {
       c.getElementsByTagName('section').forEach(function (s) {
         if (isSelected) {
           s.classList.remove('selected');
-          Yacs.user.removeSelection(s.dataset.id);
+          Yacs.user.removeSelection(c.dataset.id, s.dataset.id);
         } else if (!s.classList.contains('closed') && !s.classList.contains('conflict')) {
+          var courseName = c.querySelector('course-name').innerHTML;
           s.classList.add('selected');
-          Yacs.user.addSelection(s.dataset.id);
+          Yacs.user.addSelection(c.dataset.id, courseName, s.dataset.id);
         }
       });
       updateConflictingSections();

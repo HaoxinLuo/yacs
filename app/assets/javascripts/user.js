@@ -47,7 +47,7 @@ window.Yacs.user = new function () {
   /**
    * @description
    * Gets the value of the selection cookie
-   * @return {String} section ids as comma separated values
+   * @return {Object} JSON object of courses containing course name and selected section ids
    * @memberOf Yacs.user
    */
   self.getSelectionsRaw = function () {
@@ -55,41 +55,49 @@ window.Yacs.user = new function () {
   };
 
   /**
-   * Gets the selections from the cookie as an array of strings
-   * @return {String[]} array of section ids
+   * Gets the selections from the cookie as a JSON object
+   * @return {Object} JSON object of courses containing course name and selected section ids
    * @memberOf Yacs.user
    */
   self.getSelections = function () {
     var selections = getCookie('selections');
-    return selections ? selections.split(',') : [];
+    return selections ? JSON.parse(selections) : {};
   };
 
   /**
    * Add a selection to those already selected. Return the success value.
+   * @param {String} cid - the course id
+   * @param {String} sid - the section id
    * @param {String} sid - the section id
    * @return {Boolean} true if the selection was added, false if it was already present
    * @memberOf Yacs.user
    */
-  self.addSelection = function (sid) {
-    arr = self.getSelections();
-    if (arr.indexOf(sid) != -1) return false;
-    arr.push(sid);
-    setCookie('selections', arr.join(','));
+  self.addSelection = function (cid, cname, sid) {
+    var obj = self.getSelections();
+    if (obj[cid] && obj[cid].sections.indexOf(sid) != -1) return false;
+    if (!obj[cid])
+      obj[cid] = { 'name': cname,
+                   'sections': [] };
+    obj[cid].sections.push(sid);
+    setCookie('selections', JSON.stringify(obj));
     return true;
   };
 
   /**
    * Remove a selection from the cookie. Return the success value.
+   * @param  {String} cid - the course id
    * @param  {String} sid - the section id
    * @return {Boolean} true if the selection was removed, false if it was not present
    * @memberOf Yacs.user
    */
-  self.removeSelection = function (sid) {
-    arr = self.getSelections();
-    i = arr.indexOf(sid);
-    if (i === -1) return false;
-    arr.splice(i, 1);
-    setCookie('selections', arr.join(','));
+  self.removeSelection = function (cid, sid) {
+    var obj = self.getSelections();
+    var i;
+    if (!obj[cid] || (i = obj[cid].sections.indexOf(sid)) === -1) return false;
+    obj[cid].sections.splice(i, 1);
+    if (obj[cid].sections.length === 0)
+      delete obj[cid];
+    setCookie('selections', JSON.stringify(obj));
     return true;
   };
 
@@ -100,7 +108,13 @@ window.Yacs.user = new function () {
    * @memberOf Yacs.user
    */
   self.hasSelection = function (sid) {
-    return self.getSelections().indexOf(sid) != -1;
+    var cookie = self.getSelections();
+    var courses = Object.keys(cookie);
+    for (var i = 0; i < courses.length; i++) {
+      if (cookie[courses[i]].sections.indexOf(sid) > -1)
+        return true;
+    }
+    return false;
   };
 
   /**
@@ -110,10 +124,10 @@ window.Yacs.user = new function () {
    * @memberOf Yacs.user
    */
   self.hasAllSelections = function (sids) {
-    var selections = self.getSelections();
-    sids.forEach(function (sid) {
-      if (selections.indexOf(sid == -1)) return false;
-    });
+    if (!Array.isArray(sids)) return false;
+    for (var i = 0; i < sids.length; i++) 
+      if (!self.hasSelection(sids[i]))
+        return false;
     return true;
   };
 
@@ -123,6 +137,6 @@ window.Yacs.user = new function () {
    * @memberOf Yacs.user
    */
   self.clearSelections = function () {
-    setCookie('selections', '');
+    setCookie('selections', '{}');
   };
 }();

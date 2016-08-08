@@ -88,7 +88,7 @@ Yacs.views.schedule = function (target) {
       show(0);
     } else {
       show(-1);
-      if (Yacs.user.getSelections().length > 0) {
+      if (Object.keys(Yacs.user.getSelections()).length > 0) {
         scheduleStatusElement.textContent = "No schedules found :( Try removing some courses";
       } else {
         scheduleStatusElement.textContent = "Nothing to see here :) Try adding some courses";
@@ -102,9 +102,14 @@ Yacs.views.schedule = function (target) {
    * If no sections are selected, skip the call and show nil schedules.
    */
   var updateSchedules = function () {
-    var selections = Yacs.user.getSelectionsRaw();
-    if (selections.length > 0) {
-      Yacs.models.schedules.query({ section_ids: selections,
+    var selections = Yacs.user.getSelections();
+    var sectionIds = [];
+    for (var key in selections) {
+      if (selections.hasOwnProperty(key))
+          sectionIds = sectionIds.concat(selections[key].sections);
+    }
+    if (Object.keys(selections).length > 0) {
+      Yacs.models.schedules.query({ section_ids: sectionIds,
                                     show_periods: true },
         function(data, success) {
           if (success) {
@@ -186,8 +191,13 @@ Yacs.views.schedule = function (target) {
    * TODO: Use native event handling to update views when selection changes
    */
   var selections = Yacs.user.getSelections();
-  if (selections.length > 0) {
-    Yacs.models.courses.query({ section_id: selections.join(','),
+  if (Object.keys(selections).length > 0) {
+    var sectionIds = [];
+    for (var key in selections) {
+      if (selections.hasOwnProperty(key))
+        sectionIds = sectionIds.concat(selections[key].sections);
+    }
+    Yacs.models.courses.query({ section_id: sectionIds,
                                 show_sections: true,
                                 show_periods: true },
       function (data, success) {
