@@ -72,15 +72,17 @@ Yacs.views.courses = function (target, data) {
    */
   target.getElementsByTagName('section').forEach(function (s) {
     Yacs.on('click', s, function(section) {
+      var course = section.closest('course');
+      var cid = course.dataset.id;
       var sid = section.dataset.id;
-      if (Yacs.user.removeSelection(sid)) {
+      if (Yacs.user.removeSelection(cid, sid)) {
         section.classList.remove('selected');
       }
       else {
-        Yacs.user.addSelection(sid);
+        var courseName = course.querySelector('course-name').innerHTML;
+        Yacs.user.addSelection(cid, courseName, sid);
         section.classList.add('selected');
       }
-      var course = section.closest('course');
       course.classList[isCourseSelected(course) ? 'add' : 'remove']('selected');
     });
     if (Yacs.user.hasSelection(s.dataset.id)) s.classList.add('selected');
@@ -96,10 +98,11 @@ Yacs.views.courses = function (target, data) {
       c.getElementsByTagName('section').forEach(function (s) {
         if (isSelected) {
           s.classList.remove('selected');
-          Yacs.user.removeSelection(s.dataset.id);
+          Yacs.user.removeSelection(c.dataset.id, s.dataset.id);
         } else if (!s.classList.contains('closed')) {
+          var courseName = c.querySelector('course-name').innerHTML;
           s.classList.add('selected');
-          Yacs.user.addSelection(s.dataset.id);
+          Yacs.user.addSelection(c.dataset.id, courseName, s.dataset.id);
         }
       });
       c.classList[isSelected ? 'remove' : 'add']('selected');
