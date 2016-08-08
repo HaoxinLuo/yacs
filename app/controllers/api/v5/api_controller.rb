@@ -6,8 +6,6 @@ class Api::V5::ApiController < ActionController::Metal
   include ActionController::Caching
   include ActionController::Instrumentation
   include ActionView::Layouts
-  include ActionController::RespondWith
-  include ActionController::Renderers::All
 
   append_view_path "#{Rails.root}/app/views"
 
