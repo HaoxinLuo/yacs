@@ -5,15 +5,6 @@ class Api::V5::CoursesController < Api::V5::ApiController
   def index
     if params[:search].present?
       @query = Course.search params[:search].gsub(/[^0-9a-z\s]/i, '').split
-    elsif params[:name_search].present?
-      filter_model Course
-      query.includes! :sections
-      @names = {}
-      any(:section_id).each do |id|
-        course = query.where :"sections.id" => id
-        section = course[0].sections.where :id => id
-        @names[id] = "#{course[0].name} section #{section[0].name}"
-      end
     else
       filter_model Course
       filter :section_id do |q|
