@@ -74,11 +74,11 @@ window.Yacs.user = new function () {
    */
   self.addSelection = function (cid, cname, sid) {
     var obj = self.getSelections();
-    if (obj[cid] && obj[cid]['sections'].indexOf(sid) != -1) return false;
+    if (obj[cid] && obj[cid].sections.indexOf(sid) != -1) return false;
     if (!obj[cid])
       obj[cid] = { 'name': cname,
                    'sections': [] };
-    obj[cid]['sections'].push(sid);
+    obj[cid].sections.push(sid);
     setCookie('selections', JSON.stringify(obj));
     return true;
   };
@@ -92,9 +92,11 @@ window.Yacs.user = new function () {
    */
   self.removeSelection = function (cid, sid) {
     var obj = self.getSelections();
-    var i = obj[cid]['sections'].indexOf(sid);
-    if (i === -1) return false;
-    obj[cid]['sections'].splice(i, 1);
+    var i;
+    if (!obj[cid] || (i = obj[cid].sections.indexOf(sid)) === -1) return false;
+    obj[cid].sections.splice(i, 1);
+    if (obj[cid].sections.length === 0)
+      delete obj[cid];
     setCookie('selections', JSON.stringify(obj));
     return true;
   };
@@ -106,11 +108,13 @@ window.Yacs.user = new function () {
    * @memberOf Yacs.user
    */
   self.hasSelection = function (sid) {
-    var obj = self.getSelections();
-    Object.keys(obj).forEach(function (key) {
-      i = obj[key]['sections'].indexOf(sid);
-    });
-    return i != -1;
+    var cookie = self.getSelections();
+    var courses = Object.keys(cookie);
+    for (var i = 0; i < courses.length; i++) {
+      if (cookie[courses[i]].sections.indexOf(sid) > -1)
+        return true;
+    }
+    return false;
   };
 
   /**
@@ -121,7 +125,7 @@ window.Yacs.user = new function () {
    */
   self.hasAllSelections = function (sids) {
     if (!Array.isArray(sids)) return false;
-    for (var i = 0;i < sids.length; i++) 
+    for (var i = 0; i < sids.length; i++) 
       if (!self.hasSelection(sids[i]))
         return false;
     return true;
