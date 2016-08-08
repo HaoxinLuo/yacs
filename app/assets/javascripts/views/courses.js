@@ -74,37 +74,32 @@ Yacs.views.courses = function (target, data) {
     return isConflicting;
   };
 
-  var getCourseName = function (sectionId) {
-    var name = courseNames[sectionId];
-    if (!name) {
-      var sectionName = target.querySelector('section[data-id="' + sectionId + '"] section-name');
-      var courseName = sectionName.closest('course').querySelector('course-name');
-      name = courseName.innerHTML + ' section ' + sectionName.innerHTML;
-      courseNames[sectionId] = name;
-    }
-    return name;
-  };
-
   var doesSectionConflict = function (sectionConflicts) {
-    var conflicting = false;
-    var conflicts_with = null;
-    Yacs.user.getSelections().forEach(function (selectedSectionId) {
-      if(sectionConflicts.indexOf(selectedSectionId) != -1) {
-        conflicts_with = conflicts_with || selectedSectionId;
-        conflicting = true;
-      }
-    });
-    return {conflicting: conflicting, conflicts_with: conflicts_with};
+    var selections = Yacs.user.getSelections();
+    var selectedCourses = Object.keys(selections);
+    for (var i = 0; i < selectedCourses.length; i++) {
+      var courseId = selectedCourses[i];
+      var sections = selections[courseId].sections;
+      var numConflictingSections = 0;
+      for (; numConflictingSections < sections.length; numConflictingSections++) 
+        if (sectionConflicts.indexOf(sections[numConflictingSections]) === -1)
+          break;
+      if (numConflictingSections === sections.length)
+        return {conflicting: true, conflicts_with: selections[courseId].name};
+    }
+    return {conflicting: false, conflicts_with: null};
   };
 
   var updateConflictingSections = function () {
     data.courses.forEach(function (c) {
       var course = target.querySelector('course[data-id="'+c.id+'"]');
       c.sections.forEach(function (s) {
+        if (Yacs.user.hasSelection(s.id.toString()))
+          return;
         var section = course.querySelector('section[data-id="'+s.id+'"]');
         var conflictCheck = doesSectionConflict(s.conflicts);
         if (conflictCheck.conflicting) {
-          var courseAndSectionName = 'Conflicts with ' + getCourseName(conflictCheck.conflicts_with);
+          var courseAndSectionName = 'Conflicts with: ' + conflictCheck.conflicts_with;
           section.classList.add('conflict');
           section.setAttribute('conflicts-with', courseAndSectionName);
         }
