@@ -94,8 +94,6 @@ Yacs.views.courses = function (target, data) {
     data.courses.forEach(function (c) {
       var course = target.querySelector('course[data-id="'+c.id+'"]');
       c.sections.forEach(function (s) {
-        if (Yacs.user.hasSelection(s.id.toString()))
-          return;
         var section = course.querySelector('section[data-id="'+s.id+'"]');
         var conflictCheck = doesSectionConflict(s.conflicts);
         if (conflictCheck.conflicting) {
