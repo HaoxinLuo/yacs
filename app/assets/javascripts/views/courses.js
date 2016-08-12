@@ -66,6 +66,11 @@ Yacs.views.courses = function (target, data) {
     return isSelected;
   };
 
+  data.courses.forEach(function (c) {
+    var course = target.querySelector('course[data-id="'+c.id+'"]');
+    course.model = c;
+  });
+
   /**
    * When a section is clicked, check the cookie to see if it is selected.
    * If it is selected, unselect it. If it is not selected, select it.
@@ -73,14 +78,12 @@ Yacs.views.courses = function (target, data) {
   target.getElementsByTagName('section').forEach(function (s) {
     Yacs.on('click', s, function(section) {
       var course = section.closest('course');
-      var cid = course.dataset.id;
       var sid = section.dataset.id;
-      if (Yacs.user.removeSelection(cid, sid)) {
+      if (Yacs.user.removeSelection(course.model, [sid])) {
         section.classList.remove('selected');
       }
       else {
-        var courseName = course.querySelector('course-name').innerHTML;
-        Yacs.user.addSelection(cid, courseName, sid);
+        Yacs.user.addSelection(course.model, [sid]);
         section.classList.add('selected');
       }
       course.classList[isCourseSelected(course) ? 'add' : 'remove']('selected');
@@ -95,14 +98,14 @@ Yacs.views.courses = function (target, data) {
   target.getElementsByTagName('course').forEach(function (c) {
     Yacs.on('click', c.getElementsByTagName('course-info')[0], function (ci) {
       var isSelected = isCourseSelected(c);
+      var course = ci.closest('course');
       c.getElementsByTagName('section').forEach(function (s) {
         if (isSelected) {
           s.classList.remove('selected');
-          Yacs.user.removeSelection(c.dataset.id, s.dataset.id);
+          Yacs.user.removeSelection(course.model, [s.dataset.id]);
         } else if (!s.classList.contains('closed')) {
-          var courseName = c.querySelector('course-name').innerHTML;
           s.classList.add('selected');
-          Yacs.user.addSelection(c.dataset.id, courseName, s.dataset.id);
+          Yacs.user.addSelection(course.model, [s.dataset.id]);
         }
       });
       c.classList[isSelected ? 'remove' : 'add']('selected');

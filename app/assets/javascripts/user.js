@@ -43,7 +43,6 @@ window.Yacs.user = new function () {
 /* ======================================================================== *
     Selections
  * ======================================================================== */
-
   /**
    * @description
    * Gets the value of the selection cookie
@@ -66,38 +65,50 @@ window.Yacs.user = new function () {
 
   /**
    * Add a selection to those already selected. Return the success value.
-   * @param {String} cid - the course id
-   * @param {String} sid - the section id
-   * @param {String} sid - the section id
-   * @return {Boolean} true if the selection was added, false if it was already present
+   * @param {Object} courseObject - the object containing course name, id, and all section information
+   * @param {String[]} sectionIds - the array of section IDs to be added
+   * @return {Boolean} true if all selections are added, false if any was already present
    * @memberOf Yacs.user
    */
-  self.addSelection = function (cid, cname, sid) {
-    var obj = self.getSelections();
-    if (obj[cid] && obj[cid].sections.indexOf(sid) != -1) return false;
-    if (!obj[cid])
-      obj[cid] = { 'name': cname,
-                   'sections': [] };
-    obj[cid].sections.push(sid);
-    setCookie('selections', JSON.stringify(obj));
+  self.addSelection = function (courseObject, sectionIds) {
+    var selections = self.getSelections();
+    var courseId = courseObject.id;
+    if (selections.hasOwnProperty(courseId)) {
+      for (var i = 0; i < sectionIds.length; i++)
+        if (selections[courseId].sections.indexOf(sectionIds[i]) !== -1)
+          return false;
+    }
+    else
+      selections[courseId] = { 'name': courseObject.name,
+                               'sections': [] };
+    selections[courseId].sections.push.apply(selections[courseId].sections, sectionIds);
+    setCookie('selections', JSON.stringify(selections));
     return true;
   };
 
   /**
    * Remove a selection from the cookie. Return the success value.
-   * @param  {String} cid - the course id
-   * @param  {String} sid - the section id
-   * @return {Boolean} true if the selection was removed, false if it was not present
+   * @param  {Object}   courseObject - the object containing course name, id, and all section information
+   * @param  {String[]} sectionIds - the array of section IDs to be added
+   * @return {Boolean}  true if all the selections are removed, false if any was not present
    * @memberOf Yacs.user
    */
-  self.removeSelection = function (cid, sid) {
-    var obj = self.getSelections();
-    var i;
-    if (!obj[cid] || (i = obj[cid].sections.indexOf(sid)) === -1) return false;
-    obj[cid].sections.splice(i, 1);
-    if (obj[cid].sections.length === 0)
-      delete obj[cid];
-    setCookie('selections', JSON.stringify(obj));
+  self.removeSelection = function (courseObject, sectionIds) {
+    var selections = self.getSelections();
+    var courseId = courseObject.id;
+    if (selections.hasOwnProperty(courseId)) {
+      for (var i = 0; i < sectionIds.length; i++)
+        if (selections[courseId].sections.indexOf(sectionIds[i]) === -1)
+          return false;
+    }
+    else
+      return false;
+    for (var i = 0; i < sectionIds.length; i++) {
+      var j = selections[courseId].sections.indexOf(sectionIds[i]);
+      selections[courseId].sections.splice(j, 1);
+    }
+    if (selections[courseId].sections.length === 0) delete selections[courseId];
+    setCookie('selections', JSON.stringify(selections));
     return true;
   };
 
